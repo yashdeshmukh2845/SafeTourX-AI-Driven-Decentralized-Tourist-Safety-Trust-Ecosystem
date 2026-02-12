@@ -26,9 +26,17 @@ const Register = () => {
 
             // Show blockchain TX hash
             if (response.txId) {
-                toast.info(`Blockchain TX: ${response.txId.substring(0, 20)}...`, {
-                    autoClose: 5000,
-                });
+                toast.info(
+                    <div>
+                        Blockchain Verified! <br />
+                        <a href={response.explorerUrl || `https://testnet.algoexplorer.io/tx/${response.txId}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            style={{ textDecoration: 'underline', color: '#fff' }}>
+                            View on AlgoExplorer
+                        </a>
+                    </div>
+                    , { autoClose: 8000 });
             }
 
             setTimeout(() => navigate('/login'), 2000);

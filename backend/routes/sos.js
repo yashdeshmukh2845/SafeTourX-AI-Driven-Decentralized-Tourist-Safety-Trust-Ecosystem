@@ -23,7 +23,13 @@ router.post('/trigger', async (req, res) => {
         });
 
         await incident.save();
-        res.status(201).json({ msg: 'SOS Triggered', incident });
+        res.status(201).json({
+            success: true,
+            msg: 'SOS Triggered',
+            txId: incident.algorandTxId,
+            explorerUrl: incident.algorandTxId ? `https://testnet.algoexplorer.io/tx/${incident.algorandTxId}` : null,
+            incident
+        });
 
     } catch (err) {
         console.error(err.message);

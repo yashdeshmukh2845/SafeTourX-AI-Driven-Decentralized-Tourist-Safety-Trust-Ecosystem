@@ -72,7 +72,8 @@ def deploy():
     )
 
     signed_txn = txn.sign(private_key)
-    tx_id = signed_txn.transaction_id
+    tx_id = signed_txn.transaction.get_txid()
+
     
     print(f"Deploying App... TXID: {tx_id}")
     print(f"AlgoExplorer Link: https://testnet.algoexplorer.io/tx/{tx_id}")

@@ -6,11 +6,15 @@ const path = require('path');
 dotenv.config();
 
 // Config
-const algodToken = process.env.ALGOD_TOKEN || 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa';
-const algodServer = process.env.ALGOD_SERVER || 'http://localhost';
-const algodPort = process.env.ALGOD_PORT || 4001;
+const algodToken = process.env.ALGOD_TOKEN; // Can be empty for AlgoNode
+const algodServer = process.env.ALGOD_SERVER; // Must be set
+const algodPort = process.env.ALGOD_PORT; // Must be set
 
-const algodClient = new algosdk.Algodv2(algodToken, algodServer, algodPort);
+if (!algodServer) {
+    console.error("ALGOD_SERVER not set in .env");
+}
+
+const algodClient = new algosdk.Algodv2(algodToken || '', algodServer, algodPort);
 
 // Admin Account (Backend Wallet)
 const mnemonic = process.env.MNEMONIC;

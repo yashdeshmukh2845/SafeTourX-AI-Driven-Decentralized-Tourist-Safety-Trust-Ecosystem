@@ -42,7 +42,13 @@ router.post('/register', async (req, res) => {
         });
 
         await user.save();
-        res.status(201).json({ msg: 'User registered', user });
+        res.status(201).json({
+            success: true,
+            msg: 'User registered',
+            txId: user.algorandTxId,
+            explorerUrl: user.algorandTxId ? `https://testnet.algoexplorer.io/tx/${user.algorandTxId}` : null,
+            user
+        });
 
     } catch (err) {
         console.error(err.message);

@@ -31,9 +31,17 @@ const Booking = () => {
             toast.success('Booking secured on Algorand blockchain!');
 
             if (response.txId) {
-                toast.info(`Blockchain TX: ${response.txId.substring(0, 20)}...`, {
-                    autoClose: 5000,
-                });
+                toast.info(
+                    <div>
+                        Booking Secured! <br />
+                        <a href={response.explorerUrl || `https://testnet.algoexplorer.io/tx/${response.txId}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            style={{ textDecoration: 'underline', color: '#fff' }}>
+                            View on AlgoExplorer
+                        </a>
+                    </div>
+                    , { autoClose: 8000 });
             }
 
             setTimeout(() => navigate('/dashboard'), 2000);

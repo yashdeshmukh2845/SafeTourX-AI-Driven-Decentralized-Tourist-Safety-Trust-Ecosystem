@@ -28,7 +28,12 @@ router.post('/create', async (req, res) => {
         });
 
         await booking.save();
-        res.status(201).json(booking);
+        res.status(201).json({
+            success: true,
+            txId: booking.algorandTxId,
+            explorerUrl: booking.algorandTxId ? `https://testnet.algoexplorer.io/tx/${booking.algorandTxId}` : null,
+            booking
+        });
 
     } catch (err) {
         console.error(err.message);
