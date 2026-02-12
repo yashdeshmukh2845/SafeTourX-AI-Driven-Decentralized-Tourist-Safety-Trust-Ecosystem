@@ -28,25 +28,81 @@ Here is the current completion status of the project tasks:
   - [x] **Hotel Booking System** (Blockchain Verified)
   - [x] **SOS Emergency Alert** (Blockchain Logged)
   - [x] Admin Authority Dashboard
+  - [x] **Algorand TestNet Integration**
 
 ### 🚧 Remaining / Future Work
 - [ ] **MainNet Deployment**: Move from Algorand Sandbox/TestNet to MainNet.
 - [ ] **Real Geocoding**: Replace simplified city coordinates with dynamic reverse-geocoding.
 - [ ] **SMS/Email Alerts**: Integrate Twilio/SendGrid for real-world notifications.
 - [ ] **Role-Based Access**: Separate strict admin vs user roles.
-- [ ] **Mobile App**: Port React frontend to React Native.
 
 ---
 
-## 🛠️ Features
+## 🌐 Algorand Deployment Status
 
-| Feature | Tech Stack | Description |
-|---------|------------|-------------|
-| **Risk Prediction** | Python, Scikit-Learn | Predicts safety score (0-2) based on location, time, and crime history. |
-| **Trust Identity** | Algorand Blockchain | Verifies user identity and actions immutably on-chain. |
-| **Live Tracking** | React, Google Maps | Visualizes user location against high-risk zones. |
-| **Secure Booking** | Node.js, Blockchain | Logs hotel bookings as tamper-proof transactions. |
-| **SOS System** | API, Blockchain | Instant emergency trigger recorded for authority audit. |
+| Component | Details |
+|-----------|---------|
+| **Network** | Algorand TestNet |
+| **Node Provider** | AlgoNode Public API |
+| **Smart Contract** | PyTeal → TEAL |
+| **Deploy Script** | `projects/contracts/deploy_manual.py` |
+| **Wallet Address** | `BRZAIDE7N3PSAJMRDV7PYV5UBKMUR4QUPRL6LA3KCVU7ZOADP7CRYK44CA` |
+
+*Smart contracts are deployed on TestNet and transactions are publicly verifiable.*
+
+---
+
+## 🪙 Funding TestNet Wallet
+
+To interact with the application or deploy contracts, you need TestNet Algos.
+
+1.  **Copy your wallet address**.
+2.  Visit the [Algorand TestNet Dispenser](https://lora.algokit.io/testnet/fund).
+3.  Request **5–10 ALGO**.
+4.  Verify balance on [AlgoExplorer](https://testnet.algoexplorer.io/).
+
+---
+
+## 🚀 Smart Contract Deployment
+
+To deploy the latest version of the SafeTourX smart contracts:
+
+```bash
+cd projects/contracts
+python deploy_manual.py
+```
+
+**Output will show:**
+- ✅ **App ID**: Unique identifier for the contract.
+- 🔗 **Transaction ID**: Deployment transaction hash.
+- 🌍 **Explorer Link**: `https://testnet.algoexplorer.io/tx/{TX_ID}`
+
+---
+
+## 🔍 Verifying On-Chain Transactions
+
+The following actions are transparently logged on Algorand TestNet:
+
+- **User Registration**: Identity hash stored.
+- **Hotel Booking**: Booking details secured.
+- **SOS Trigger**: Emergency event logged.
+
+**To Verify:**
+1. Perform an action in the app (e.g., Register).
+2. Copy the **TX ID** from the success notification.
+3. Visit [AlgoExplorer TestNet](https://testnet.algoexplorer.io/).
+4. Paste the TX ID to see the immutable record.
+
+---
+
+## ✅ Deployment Summary
+
+- **Smart Contract**: Deployed on TestNet
+- **Identity Logging**: On-Chain ✅
+- **Booking Logging**: On-Chain ✅
+- **SOS Logging**: On-Chain ✅
+- **Verification**: Public Explorer Links ✅
+- **Status**: **Hackathon-Ready MVP** 🏆
 
 ---
 
@@ -55,14 +111,12 @@ Here is the current completion status of the project tasks:
 ### ⚡ The "Zero-Config" Magic
 We've implemented an **In-Memory Database** fallback.
 **You do NOT need to install MongoDB locally to run the demo!**
-*(If MongoDB is missing, the app automatically spins up a temporary database in RAM)*
 
 ### 1. Start Backend (Port 5000)
 ```bash
 cd backend
 npm start
 ```
-*Output should say: `✅ MongoDB Connected Successfully`*
 
 ### 2. Start AI Service (Port 5001)
 ```bash
@@ -81,27 +135,5 @@ Access the app at: **http://localhost:3000**
 
 ---
 
-## 🧪 Testing the API
-
-You can test the AI Risk Prediction directly:
-```bash
-curl -X POST http://localhost:5001/predict \
-  -H "Content-Type: application/json" \
-  -d '{"crime_rate":50,"hour":22,"lat":0.5,"lon":0.5}'
-```
-
----
-
-## 📁 Project Structure
-```
-SafeTourX/
-├── backend/       # Node.js API + MongoDB + Algorand
-├── frontend/      # React UI + Tailwind CSS
-├── ai_model/      # Python Flask + ML Model
-└── projects/      # Smart Contracts
-```
-
----
-
 ## 📜 License
-MIT License. Built for **SafeTourX Team**.
+MIT License. Built with ❤️ by **SafeTourX Team**.
