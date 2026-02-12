@@ -1,0 +1,116 @@
+#pragma version 6
+txn ApplicationID
+int 0
+==
+bnz main_l20
+txn NumAppArgs
+int 0
+==
+bnz main_l19
+txn OnCompletion
+int NoOp
+==
+bnz main_l12
+txn OnCompletion
+int OptIn
+==
+bnz main_l11
+txn OnCompletion
+int CloseOut
+==
+bnz main_l10
+txn OnCompletion
+int UpdateApplication
+==
+bnz main_l9
+txn OnCompletion
+int DeleteApplication
+==
+bnz main_l8
+err
+main_l8:
+txn Sender
+global CreatorAddress
+==
+return
+main_l9:
+txn Sender
+global CreatorAddress
+==
+return
+main_l10:
+int 1
+return
+main_l11:
+txn Sender
+byte "IdentityHash"
+byte ""
+app_local_put
+int 1
+return
+main_l12:
+txna ApplicationArgs 0
+byte "register"
+==
+bnz main_l18
+txna ApplicationArgs 0
+byte "book"
+==
+bnz main_l17
+txna ApplicationArgs 0
+byte "sos"
+==
+bnz main_l16
+err
+main_l16:
+txn NumAppArgs
+int 3
+==
+assert
+byte "SOS:"
+txna ApplicationArgs 1
+concat
+byte "|"
+concat
+txna ApplicationArgs 2
+concat
+log
+int 1
+return
+main_l17:
+txn NumAppArgs
+int 2
+==
+assert
+byte "BookingCount"
+byte "BookingCount"
+app_global_get
+int 1
++
+app_global_put
+byte "Booking:"
+txna ApplicationArgs 1
+concat
+log
+int 1
+return
+main_l18:
+txn NumAppArgs
+int 2
+==
+assert
+txn Sender
+byte "IdentityHash"
+txna ApplicationArgs 1
+app_local_put
+int 1
+return
+main_l19:
+int 1
+return
+main_l20:
+byte "BookingCount"
+int 0
+app_global_put
+int 1
+return
