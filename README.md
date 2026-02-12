@@ -38,17 +38,21 @@ Here is the current completion status of the project tasks:
 
 ---
 
-## 🌐 Algorand Deployment Status
+## 🌐 Algorand TestNet Deployment
+
+SafeTourX smart contracts are fully deployed and publicly verifiable on the Algorand TestNet.
 
 | Component | Details |
 |-----------|---------|
-| **Network** | Algorand TestNet |
+| **Network** | **Algorand TestNet** |
 | **Node Provider** | AlgoNode Public API |
 | **Smart Contract** | PyTeal → TEAL |
 | **Deploy Script** | `projects/contracts/deploy_manual.py` |
-| **Wallet Address** | `BRZAIDE7N3PSAJMRDV7PYV5UBKMUR4QUPRL6LA3KCVU7ZOADP7CRYK44CA` |
+| **Application ID** | **`755433170`** |
+| **Deployment Wallet** | `BRZAIDE7N3PSAJMRDV7PYV5UBKMUR4QUPRL6LA3KCVU7ZOADP7CRYK44CA` |
+| **Deployment TXID** | **`V4YRGP233BK56E4U3WVYWF6YC4Y2MMADE5S2IV46V6HBINICBSTA`** |
 
-*Smart contracts are deployed on TestNet and transactions are publicly verifiable.*
+🔗 **[View Deployment on AlgoExplorer](https://testnet.algoexplorer.io/tx/V4YRGP233BK56E4U3WVYWF6YC4Y2MMADE5S2IV46V6HBINICBSTA)**
 
 ---
 
@@ -63,19 +67,37 @@ To interact with the application or deploy contracts, you need TestNet Algos.
 
 ---
 
-## 🚀 Smart Contract Deployment
+## 🚀 Deployment Commands
 
-To deploy the latest version of the SafeTourX smart contracts:
+To re-deploy the SafeTourX smart contracts or start the full stack:
 
+### 1. Deploy Contract
 ```bash
 cd projects/contracts
 python deploy_manual.py
 ```
+*Script outputs the new App ID and Transaction URL.*
 
-**Output will show:**
-- ✅ **App ID**: Unique identifier for the contract.
-- 🔗 **Transaction ID**: Deployment transaction hash.
-- 🌍 **Explorer Link**: `https://testnet.algoexplorer.io/tx/{TX_ID}`
+### 2. Start Backend (Port 5000)
+```bash
+cd backend
+npm start
+```
+
+### 3. Start AI Service (Port 5001)
+```bash
+cd ai_model
+# Windows
+.venv\Scripts\activate
+python app.py
+```
+
+### 4. Start Frontend (Port 3000)
+```bash
+cd frontend
+npm start
+```
+Access the app at: **http://localhost:3000**
 
 ---
 
@@ -111,27 +133,6 @@ The following actions are transparently logged on Algorand TestNet:
 ### ⚡ The "Zero-Config" Magic
 We've implemented an **In-Memory Database** fallback.
 **You do NOT need to install MongoDB locally to run the demo!**
-
-### 1. Start Backend (Port 5000)
-```bash
-cd backend
-npm start
-```
-
-### 2. Start AI Service (Port 5001)
-```bash
-cd ai_model
-# Windows
-.venv\Scripts\activate
-python app.py
-```
-
-### 3. Start Frontend (Port 3000)
-```bash
-cd frontend
-npm start
-```
-Access the app at: **http://localhost:3000**
 
 ---
 
