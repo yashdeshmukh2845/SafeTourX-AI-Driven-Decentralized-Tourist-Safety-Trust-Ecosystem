@@ -171,3 +171,4 @@ node_modules
 backend/.env.example
 ai_model/risk_model.pkl
 *.msi
+.algokit/
