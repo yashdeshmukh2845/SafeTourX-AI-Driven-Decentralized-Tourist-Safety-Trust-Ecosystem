@@ -168,9 +168,55 @@ async function logIncidentOnChain(location, type) {
     return txId;
 }
 
+async function logReviewOnChain(reviewHash) {
+    if (!adminAccount) throw new Error("Admin account not configured");
+
+    const params = await algodClient.getTransactionParams().do();
+    const appArgs = [
+        new Uint8Array(Buffer.from("review")),
+        new Uint8Array(Buffer.from(reviewHash))
+    ];
+
+    const txn = algosdk.makeApplicationNoOpTxn(
+        adminAccount.addr,
+        params,
+        appId,
+        appArgs
+    );
+
+    const signedTxn = txn.signTxn(adminAccount.sk);
+    const { txId } = await algodClient.sendRawTransaction(signedTxn).do();
+    await waitForConfirmation(algodClient, txId);
+    return txId;
+}
+
+async function logRefundOnChain(bookingHash) {
+    if (!adminAccount) throw new Error("Admin account not configured");
+
+    const params = await algodClient.getTransactionParams().do();
+    const appArgs = [
+        new Uint8Array(Buffer.from("refund")),
+        new Uint8Array(Buffer.from(bookingHash))
+    ];
+
+    const txn = algosdk.makeApplicationNoOpTxn(
+        adminAccount.addr,
+        params,
+        appId,
+        appArgs
+    );
+
+    const signedTxn = txn.signTxn(adminAccount.sk);
+    const { txId } = await algodClient.sendRawTransaction(signedTxn).do();
+    await waitForConfirmation(algodClient, txId);
+    return txId;
+}
+
 module.exports = {
     registerUserOnChain,
     logBookingOnChain,
     logIncidentOnChain,
+    logReviewOnChain,
+    logRefundOnChain,
     algodClient
 };

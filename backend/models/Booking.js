@@ -7,7 +7,12 @@ const BookingSchema = new mongoose.Schema({
     checkOut: { type: Date, required: true },
     bookingHash: { type: String },
     algorandTxId: { type: String },
-    status: { type: String, enum: ['Confirmed', 'Refunded'], default: 'Confirmed' },
+    escrowTxId: { type: String },
+    status: {
+        type: String,
+        enum: ['Pending', 'Confirmed', 'Completed', 'Cancelled', 'Refunded'],
+        default: 'Pending'
+    },
     createdAt: { type: Date, default: Date.now }
 });
 

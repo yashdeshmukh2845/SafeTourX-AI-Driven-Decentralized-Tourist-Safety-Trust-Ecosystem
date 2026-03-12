@@ -29,6 +29,7 @@ const SOS = () => {
                 try {
                     const response = await triggerSOS({
                         userId: user._id,
+                        userEmail: user?.email,
                         location: `${loc.lat},${loc.lon}`,
                         type: 'Emergency',
                         riskScore: 100,

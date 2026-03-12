@@ -42,6 +42,11 @@ export const getUserBookings = async (userId) => {
     return response.data;
 };
 
+export const updateBookingStatus = async (bookingId, status) => {
+    const response = await api.put(`/booking/${bookingId}/status`, { status });
+    return response.data;
+};
+
 // SOS APIs
 export const triggerSOS = async (sosData) => {
     const response = await api.post('/sos/trigger', sosData);
@@ -55,7 +60,28 @@ export const getAllIncidents = async () => {
 
 // Risk Prediction API
 export const getRiskPrediction = async (location) => {
-    const response = await api.post('/risk', location);
+    // Falls back to /api/risk/ via proxy if mounted at /api/risk and route is /
+    // If backend route is /risk/risk, we might access /risk/risk
+    // Safest is to try root
+    try {
+        const response = await api.post('/risk', location);
+        return response.data;
+    } catch {
+        // Fallback for older route structure
+        const response = await api.post('/risk/risk', location);
+        return response.data;
+    }
+};
+
+// Route Risk Analysis
+export const getRouteRisk = async (points) => {
+    const response = await api.post('/risk/batch', { points });
+    return response.data;
+};
+
+// Reviews
+export const submitReview = async (reviewData) => {
+    const response = await api.post('/reviews/add', reviewData);
     return response.data;
 };
 

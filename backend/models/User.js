@@ -6,6 +6,9 @@ const UserSchema = new mongoose.Schema({
     password: { type: String, required: true },
     identityHash: { type: String },
     algorandTxId: { type: String },
+    isShadowModeActive: { type: Boolean, default: false },
+    emergencyContact: { type: String },
+    lastSafeCheck: { type: Date },
     createdAt: { type: Date, default: Date.now }
 });
 

@@ -1,0 +1,93 @@
+
+# 🗺️ Full SafeTourX Map & Safest Path System: Technical Documentation
+
+This guide details the complete implementation of the "Live Safety Map" and "Safest Path Finder" features in SafeTourX, including the Machine Learning (ML) model integration. This is designed for an AI to replicate or understand the system architecture.
+
+---
+
+## 🏗️ 1. Architecture Overview (The Stack)
+
+The system consists of three layers:
+1.  **Frontend (React + Leaflet)**: Handles user interaction, map rendering, and route fetching from OSRM.
+2.  **Backend (Node.js/Express)**: Acts as a proxy API between the frontend and the AI service.
+3.  **AI Service (Python/Flask)**: Runs the trained ML model to predict crime risk based on coordinates and time.
+
+---
+
+## 🤖 2. The Machine Learning Model (The Brain)
+
+### Dataset
+- **File**: `maharashtra_crime_dummy_50000.csv`
+- **Columns**: `Latitude`, `Longitude`, `Time` (HH:MM), `Risk_Level` (Target: Low, Medium, High, Very High).
+- **Preprocessing**:
+  - `Time` is converted to `Hour` (0-23).
+  - `Risk_Level` is encoded: `Low=0`, `Medium=1`, `High=2`, `Very High=3`.
+
+### Model Training (`train_model.py`)
+- **Algorithm**: `RandomForestClassifier` (Scikit-Learn).
+- **Features**: `[Latitude, Longitude, Hour]`.
+- **Output**: Probability distribution across 4 classes (Low, Medium, High, Very High).
+- **File**: Saved as `risk_model.pkl`.
+
+### AI API Service (`ai_model/app.py`)
+- **Framework**: Flask (Python).
+- **Endpoint**: `POST /predict_batch`
+- **Input**: `{ "points": [{ "lat": 19.0, "lon": 72.8, "hour": 20 }, ...] }`
+- **Logic**:
+  1.  Loads `risk_model.pkl`.
+  2.  For each point, calls `model.predict_proba()` to get probabilities `[P0, P1, P2, P3]`.
+  3.  **Risk Percentage Calculation**:
+      `Score = (P0*0 + P1*33 + P2*66 + P3*100)`
+      (e.g., if model is 100% sure it's High Risk, Score = 66%).
+  4.  Returns: `avg_risk_score` (0-100) for the whole path and individual point details.
+
+---
+
+## 🔗 3. The Backend (The Bridge)
+
+### Node.js/Express (`backend/server.js` & `backend/routes/risk.js`)
+- **Role**: Secure Proxy to avoid exposing the Python service directly.
+- **Endpoint**: `POST /api/risk/batch`
+- **Behavior**:
+  - Receives sampled route points from Frontend.
+  - Forwards request to `http://localhost:5001/predict_batch`.
+  - Returns the AI response to Frontend.
+
+---
+
+## 🖥️ 4. The Frontend (The Interface)
+
+### Interactive Map (`frontend/src/pages/MapView.js`)
+- **Library**: `react-leaflet` (Leaflet.js wrapper).
+- **Tile Layer**: OpenStreetMap (`https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png`).
+
+### Routing Logic (Safest Path Finder)
+1.  **User Input**: User clicks Start and Destination points.
+2.  **Fetch Routes**:
+    - Calls **OSRM API**: `https://router.project-osrm.org/route/v1/driving/...`
+    - Parameter `alternatives=true` ensures multiple path options (routes) are returned.
+3.  **Sampling**:
+    - A route consists of thousands of coordinate points.
+    - To optimize performance, we analyze only every **20th point**.
+4.  **Risk Analysis**:
+    - Frontend sends these sampled points to `POST /api/risk/batch`.
+    - It receives an `avgRiskScore` (0-100%) for each route.
+5.  **Visualization & Color Coding**:
+    - Routes are sorted by Risk Score (Lowest = Best).
+    - **Polylines** are drawn with dynamic colors:
+      - **Green**: Score < 30% (Safest)
+      - **Yellow**: Score < 60%
+      - **Orange**: Score < 80%
+      - **Red**: Score > 80% (Dangerous)
+    - The "Best/Safest" route is highlighted with a thicker line and opacity.
+6.  **Details**: A popup on click shows "Risk Score: XX%", Distance, and Duration.
+
+---
+
+## 🚀 5. Execution Flow Summary
+
+1.  **User** selects paths -> **Frontend** gets routes from **OSRM**.
+2.  **Frontend** samples points -> Sends to **Backend**.
+3.  **Backend** forwards to **Python AI**.
+4.  **Python AI** predicts probabilities -> Calculates **Risk %** -> Returns JSON.
+5.  **Frontend** receives data -> Colors routes on map (Green/Yellow/Red) -> Highlights safest path.

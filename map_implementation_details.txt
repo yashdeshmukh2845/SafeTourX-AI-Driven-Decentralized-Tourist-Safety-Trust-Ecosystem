@@ -1,0 +1,96 @@
+
+# 🗺️ SafeTourX Map Feature: Implementation & Working
+
+This document explains the architecture, technology stack, and step-by-step logic behind the Live Safety Map and Safest Path Finder in SafeTourX.
+
+---
+
+## 🏗️ 1. Technology Stack
+The map feature is built using the following technologies:
+
+- **Frontend:**
+  - **React Leaflet**: A wrapper for Leaflet.js, used to render the interactive map.
+  - **React Router**: For navigation between pages.
+  - **Axios**: For making HTTP requests to the backend and external APIs.
+  - **Tailwind CSS**: For styling the UI components overlaying the map.
+
+- **Routing Engine:**
+  - **OSRM (Open Source Routing Machine)**: A high-performance routing engine used to calculate driving paths between two coordinates. We use the public demo server (`router.project-osrm.org`).
+
+- **Backend (Node.js/Express):**
+  - Acts as a secure proxy between the Frontend and the Python AI Service.
+  - **Endpoint**: `/api/risk/batch` reserves requests from the frontend and forwards them to the Python AI service.
+
+- **AI Service (Python/Flask):**
+  - **Library**: Scikit-Learn (RandomForestClassifier).
+  - **Data Source**: `maharashtra_crime_dummy_50000.csv` (Simulated crime data with Lat/Lon/Time).
+  - **Logic**: Predicts the probability of crime at specific coordinates and times to generate a "Risk Percentage".
+
+---
+
+## 🛠️ 2. Step-by-Step Implementation Guide
+
+### Step 1: Setting up the Map (`MapView.js`)
+- We use `<MapContainer>` from `react-leaflet` to initialize the map.
+- The user's current location is fetched using the browser's **Geolocation API** (`navigator.geolocation.getCurrentPosition`).
+- This location is set as the `center` of the map and marked with a `<LocationMarker>`.
+
+### Step 2: Selecting Points
+- The user clicks on the map to set a **Start Point** and a **Destination Point**.
+- We use a custom `ClickHandler` component that listens for map clicks and updates the state (`startPoint`, `endPoint`).
+
+### Step 3: Fetching Routes (The "Analyze" Button)
+- When the user clicks "Analyze Routes":
+  - The Frontend sends a request to the **OSRM API**:
+    `https://router.project-osrm.org/route/v1/driving/{start_lon},{start_lat};{end_lon},{end_lat}?alternatives=true`
+  - **Key Parameter**: `alternatives=true` ensures we get multiple possible paths, not just one.
+  - OSRM returns an array of routes, each containing geometry (coordinates) and metadata (distance, duration).
+
+### Step 4: Analyzing Risk for Each Route
+- We cannot check every single point on a route (thousands of points would be too slow).
+- **Sampling**: We take every **20th point** from the route's coordinate list.
+- **Batch Request**: The frontend sends these sampled points to our backend API:
+  `POST /api/routes/risk/batch` -> `POST http://localhost:5001/predict_batch`
+
+### Step 5: The AI Model's Role
+- The Python Flask service receives the list of points.
+- It loads the pre-trained `RandomForest` model (`risk_model.pkl`).
+- For each point:
+  - It inputs `Latitude`, `Longitude`, and `Hour` (Current Time).
+  - It calls `model.predict_proba()` to get the probability of crime (Low, Medium, High, Very High).
+  - It calculates a **Weighted Risk Score (0-100%)**:
+    `Risk % = (P_Low * 0) + (P_Med * 33) + (P_High * 66) + (P_VeryHigh * 100)`
+- It returns the average risk score for the entire path.
+
+### Step 6: Visualization
+- The Frontend receives the risk scores for all routes.
+- **Sorting**: It sorts the routes from lowest risk to highest risk.
+- **Color Coding**:
+  - **Green (<30%)**: Safe
+  - **Yellow (<60%)**: Moderate
+  - **Orange (<80%)**: High Risk
+  - **Red (>80%)**: Dangerous
+- **Rendering**:
+  - The safest route is drawn thick and opaque.
+  - Riskier routes are drawn thinner and semi-transparent.
+  - A popup displays the exact **Risk Percentage**, **Distance**, and **Duration**.
+
+---
+
+## 🔄 3. Data Flow Summary
+
+1. **User** clicks start/end.
+2. **Frontend** asks **OSRM** for routes.
+3. **OSRM** returns geometry (lines).
+4. **Frontend** samples points from lines -> Sends to **Backend**.
+5. **Backend** forwards to **Python AI**.
+6. **Python AI** checks `maharashtra_crime_dummy_50000.csv` patterns -> Returns **Risk %**.
+7. **Frontend** colors the lines on the map based on **Risk %**.
+
+---
+
+## 🧪 4. How to Verify
+1. Open `MapView.js` to see the `handleFindSafestPath` function (Logic Hub).
+2. Open `ai_model/app.py` to see the `predict_batch` function (Risk Calculation).
+3. Open `backend/routes/risk.js` to see the proxy connection.
+4. Run the app and observe that different routes have different colors based on the simulated crime data in that region.

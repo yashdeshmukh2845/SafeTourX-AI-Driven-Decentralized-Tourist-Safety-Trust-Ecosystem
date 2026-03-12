@@ -1,58 +1,85 @@
 const express = require('express');
 const router = express.Router();
-const User = require('../models/User');
+const supabase = require('../utils/supabase'); // Supabase Client
 const { registerUserOnChain } = require('../utils/algorand');
 const crypto = require('crypto');
+const jwt = require('jsonwebtoken');
+const bcrypt = require('bcryptjs'); // Assuming bcryptjs is installed, or use crypto if not. The old code used crypto for hash, let's stick to crypto for consistency with old code unless I see bcrypt usage. Old code used crypto.createHash.
 
 // Register
 router.post('/register', async (req, res) => {
     try {
         const { username, email, password } = req.body;
 
-        // Basic check
-        let user = await User.findOne({ email });
-        if (user) return res.status(400).json({ msg: 'User already exists' });
+        // Check if user exists
+        const { data: existingUsers, error: checkError } = await supabase
+            .from('users')
+            .select('*')
+            .or(`email.eq.${email},username.eq.${username}`);
 
-        // Hash password (simple) or use bcrypt (better). MVP: use plain or simple hash.
-        // Prompt says "clean", let's use simple hash for speed/deps reduction or just store as is? 
-        // No, security. I'll use crypto for hash.
+        if (checkError) throw checkError;
+        if (existingUsers && existingUsers.length > 0) {
+            return res.status(400).json({ msg: 'User already exists' });
+        }
+
+        // Hash password (using crypto as per previous implementation style, or bcrypt if preferred)
+        // Previous file used: const passwordHash = crypto.createHash('sha256').update(password).digest('hex');
         const passwordHash = crypto.createHash('sha256').update(password).digest('hex');
 
-        // Generate Identity Hash for Blockchain
+        // Generate Identity Hash
         const identityHash = crypto.createHash('sha256').update(username + email + Date.now()).digest('hex');
 
         // Blockchain Interaction
         let txId = "";
         try {
-            // We use a dummy address for user or just log the hash
             txId = await registerUserOnChain(null, identityHash);
         } catch (err) {
             console.error("Blockchain Error:", err.message);
-            // Non-blocking for MVP? Or blocking? PROMPT: "Trust Ecosystem". Blockchain is key.
-            // But if no creds, it fails.
-            // We'll proceed but note the error.
         }
 
-        user = new User({
-            username,
-            email,
-            password: passwordHash,
-            identityHash,
-            algorandTxId: txId
-        });
+        // Insert into Supabase
+        const { data: newUser, error: insertError } = await supabase
+            .from('users')
+            .insert([{
+                username,
+                email,
+                password: passwordHash,
+                identity_hash: identityHash,
+                algorand_tx_id: txId
+            }])
+            .select() // Return the inserted row
+            .single();
 
-        await user.save();
-        res.status(201).json({
-            success: true,
-            msg: 'User registered',
-            txId: user.algorandTxId,
-            explorerUrl: user.algorandTxId ? `https://testnet.algoexplorer.io/tx/${user.algorandTxId}` : null,
-            user
-        });
+        if (insertError) throw insertError;
+
+        // Create JWT Payload
+        const payload = {
+            id: newUser.id,
+            email: newUser.email
+        };
+
+        // Sign Token
+        jwt.sign(
+            payload,
+            process.env.JWT_SECRET || 'secret_token_123',
+            { expiresIn: '5d' },
+            (err, token) => {
+                if (err) throw err;
+                res.status(201).json({
+                    success: true,
+                    msg: 'User registered',
+                    token,
+                    txId,
+                    explorerUrl: txId ? `https://testnet.algoexplorer.io/tx/${txId}` : null,
+                    user: newUser
+                });
+            }
+        );
 
     } catch (err) {
         console.error(err.message);
-        res.status(500).send('Server Error');
+        console.error(err.message);
+        res.status(500).json({ msg: `Server Error: ${err.message}` });
     }
 });
 
@@ -62,16 +89,47 @@ router.post('/login', async (req, res) => {
         const { email, password } = req.body;
         const passwordHash = crypto.createHash('sha256').update(password).digest('hex');
 
-        let user = await User.findOne({ email });
-        if (!user) return res.status(400).json({ msg: 'Invalid Credentials' });
+        // Check User
+        const { data: user, error } = await supabase
+            .from('users')
+            .select('*')
+            .eq('email', email)
+            .single();
 
-        if (user.password !== passwordHash) return res.status(400).json({ msg: 'Invalid Credentials' });
+        if (error || !user) {
+            return res.status(400).json({ msg: 'Invalid Credentials' });
+        }
 
-        res.json({ msg: 'Logged in', user });
+        // Check Password
+        if (user.password !== passwordHash) {
+            return res.status(400).json({ msg: 'Invalid Credentials' });
+        }
+
+        // Generate Token
+        // Payload must match middleware expectations (if any)
+        const payload = {
+            id: user.id,
+            email: user.email
+        };
+
+        jwt.sign(
+            payload,
+            process.env.JWT_SECRET || 'secret_token_123',
+            { expiresIn: '5d' },
+            (err, token) => {
+                if (err) throw err;
+                res.json({
+                    msg: 'Logged in',
+                    user,
+                    token
+                });
+            }
+        );
 
     } catch (err) {
         console.error(err.message);
-        res.status(500).send('Server Error');
+        console.error(err.message);
+        res.status(500).json({ msg: `Server Error: ${err.message}` });
     }
 });
 

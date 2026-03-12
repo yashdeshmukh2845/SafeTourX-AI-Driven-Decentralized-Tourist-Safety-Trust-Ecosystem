@@ -11,34 +11,34 @@ export const useUser = () => {
 };
 
 export const UserProvider = ({ children }) => {
-    const [user, setUser] = useState(null);
-    const [token, setToken] = useState(null);
-    const [loading, setLoading] = useState(true);
-
-    useEffect(() => {
-        // Check for stored token on mount
-        const storedToken = localStorage.getItem('token');
+    // Initialize state directly from localStorage to prevent flickering
+    const [user, setUser] = useState(() => {
         const storedUser = localStorage.getItem('user');
+        return storedUser ? JSON.parse(storedUser) : null;
+    });
+    const [token, setToken] = useState(() => localStorage.getItem('token'));
+    const [loading, setLoading] = useState(false); // No async check needed
 
-        if (storedToken && storedUser) {
-            setToken(storedToken);
-            setUser(JSON.parse(storedUser));
-        }
-        setLoading(false);
-    }, []);
-
+    // Login function
     const login = (userData, authToken) => {
+        if (!authToken || !userData) {
+            console.error("Invalid login attempt");
+            return;
+        }
         setUser(userData);
         setToken(authToken);
         localStorage.setItem('token', authToken);
         localStorage.setItem('user', JSON.stringify(userData));
     };
 
+    // Logout function
     const logout = () => {
         setUser(null);
         setToken(null);
         localStorage.removeItem('token');
         localStorage.removeItem('user');
+        // Force redirect to login
+        window.location.href = '/login';
     };
 
     const value = {

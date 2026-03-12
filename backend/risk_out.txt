@@ -1,0 +1,15 @@
+{
+  "input": {
+    "hour": 22,
+    "lat": 19.076,
+    "lon": 72.8777
+  },
+  "probabilities": {
+    "High": 0.1,
+    "Low": 0.34,
+    "Medium": 0.13,
+    "Very High": 0.43
+  },
+  "risk_level": "Very High",
+  "risk_score": 53.89
+}

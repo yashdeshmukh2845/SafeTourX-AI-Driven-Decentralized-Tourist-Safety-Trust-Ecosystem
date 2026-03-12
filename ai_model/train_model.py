@@ -1,70 +1,44 @@
-import pandas as pd
+++import pandas as pd
 import numpy as np
 from sklearn.model_selection import train_test_split
 from sklearn.ensemble import RandomForestClassifier
-from sklearn.metrics import accuracy_score
+from sklearn.preprocessing import LabelEncoder
 import joblib
 
-# 1. Generate Dummy Data
-# Features: 
-# - crime_rate: 0 (Safe) to 100 (Dangerous)
-# - hour: 0 to 23
-# - lat, lon: Normalized coordinates for simplicity (0 to 1)
+# Load Data
+print("Loading dataset...")
+df = pd.read_csv('maharashtra_crime_dummy_50000.csv')
 
-np.random.seed(42)
-n_samples = 1000
+# Preprocessing
+print("Preprocessing...")
+# Extract Hour from Time (HH:MM)
+df['Hour'] = pd.to_datetime(df['Time'], format='%H:%M').dt.hour
 
-crime_rate = np.random.randint(0, 101, n_samples)
-hour = np.random.randint(0, 24, n_samples)
-lat = np.random.uniform(0, 1, n_samples)
-lon = np.random.uniform(0, 1, n_samples)
+# Encode Target
+le = LabelEncoder()
+# Mapping order preference: Low=0, Medium=1, High=2, Very High=3
+# LabelEncoder sorts alphabetically: High, Low, Medium, Very High. This is bad for regression-like ordinality but okay for classification if we map back correctly.
+# Let's map manually to ensure risk order.
+risk_mapping = {'Low': 0, 'Medium': 1, 'High': 2, 'Very High': 3}
+df['Risk_Class'] = df['Risk_Level'].map(risk_mapping)
 
-# Target: Risk Score (0: Low, 1: Medium, 2: High)
-# Logic: 
-# - High crime_rate (> 70) -> High Risk
-# - Late night (22-04) + Med crime_rate (> 40) -> High Risk
-# - Low crime_rate (< 30) -> Low Risk
-# - Else -> Medium Risk
+# Features: Lat, Lon, Hour
+X = df[['Latitude', 'Longitude', 'Hour']]
+y = df['Risk_Class']
 
-risk_score = []
-for i in range(n_samples):
-    c = crime_rate[i]
-    h = hour[i]
-    
-    if c > 70:
-        risk_score.append(2) # High
-    elif (h >= 22 or h <= 4) and c > 40:
-        risk_score.append(2) # High
-    elif c < 30:
-        risk_score.append(0) # Low
-    else:
-        risk_score.append(1) # Medium
-
-df = pd.DataFrame({
-    'crime_rate': crime_rate,
-    'hour': hour,
-    'lat': lat,
-    'lon': lon,
-    'risk_score': risk_score
-})
-
-print("Dataset Head:")
-print(df.head())
-
-# 2. Train Model
-X = df[['crime_rate', 'hour', 'lat', 'lon']]
-y = df['risk_score']
-
+# Train/Test Split
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
+# Train Model
+print("Training Random Forest...")
 model = RandomForestClassifier(n_estimators=100, random_state=42)
 model.fit(X_train, y_train)
 
-# 3. Evaluate
-predictions = model.predict(X_test)
-accuracy = accuracy_score(y_test, predictions)
-print(f"Model Accuracy: {accuracy * 100:.2f}%")
+# Evaluate
+accuracy = model.score(X_test, y_test)
+print(f"Model Accuracy: {accuracy:.2f}")
 
-# 4. Save Model
+# Save Model
+print("Saving model...")
 joblib.dump(model, 'risk_model.pkl')
-print("Model saved to risk_model.pkl")
+print("✅ Risk Model Saved!")

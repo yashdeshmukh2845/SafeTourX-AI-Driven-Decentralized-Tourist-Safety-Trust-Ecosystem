@@ -36,6 +36,18 @@ Here is the current completion status of the project tasks:
 - [ ] **SMS/Email Alerts**: Integrate Twilio/SendGrid for real-world notifications.
 - [ ] **Role-Based Access**: Separate strict admin vs user roles.
 
+### 🚀 Implemented Enhancements (Hackathon Ready)
+- **Shadow Mode**: 
+  - Real-time safety monitoring toggled from Dashboard.
+  - Automatic SOS triggering if risk level stays high without user response.
+  - Emergency contact integration.
+- **Proof-of-Stay Reviews**:
+  - Verified booking reviews stored on-chain.
+  - "Verified Stay" badge for authentic feedback.
+- **Smart Escrow Simulation**:
+  - Booking lifecycle management (Pending -> Confirmed -> Completed/Refunded).
+  - Simulated funds holding and blockchain-logged refunds.
+
 ---
 
 ## 🌐 Algorand TestNet Deployment
